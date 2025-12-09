@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>BoxOffice Space – Office Locations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    h2{margin:0;padding:10px 12px;background:#fff;border-bottom:2px solid #111;font-size:18px}
+    #map{height:calc(100vh - 56px);width:100%}
+
+    /* Custom pin with logo */
+    .custom-marker {
+      position: relative;
+      width: 50px;
+      height: 64px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .pin-background {
+      position: absolute;
+      width: 50px;
+      height: 64px;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    
+    .logo-container {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      z-index: 2;
+      overflow: hidden;
+      border: 2px solid white;
+      padding: 2px;
+    }
+    
+    .logo-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Enhanced colorful labels with BLACK BORDER */
+    .side-label {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 8px 15px; 
+      border-radius: 10px; 
+      border: 3px solid #000;
+      font-weight: 700; 
+      font-size: 14.5px; 
+      white-space: nowrap; 
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      max-width: 200px; 
+      overflow: hidden; 
+      text-overflow: ellipsis;
+      color: #fff;
+      letter-spacing: 0.4px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+      position: relative;
+    }
+    
+    .side-label.arrow-right::after {
+      content: ""; 
+      position: absolute; 
+      left: -10px; 
+      top: 50%; 
+      transform: translateY(-50%);
+      border-width: 8px; 
+      border-style: solid; 
+      border-color: transparent #667eea transparent transparent;
+      filter: drop-shadow(-2px 0 2px rgba(0,0,0,0.25));
+    }
+    
+    .side-label.arrow-left::after {
+      content: ""; 
+      position: absolute; 
+      right: -10px; 
+      top: 50%; 
+      transform: translateY(-50%);
+      border-width: 8px; 
+      border-style: solid; 
+      border-color: transparent transparent transparent #764ba2;
+      filter: drop-shadow(2px 0 2px rgba(0,0,0,0.25));
+    }
+
+    /* Popup styling */
+    .popup-box { width: 250px; text-align: center; }
+    .popup-title { 
+      font-weight: 700; 
+      margin-bottom: 12px; 
+      font-size: 17px; 
+      color: #222;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .popup-image { 
+      width: 100%; 
+      height: 160px; 
+      object-fit: cover; 
+      border-radius: 10px; 
+      border: 2px solid rgba(102, 126, 234, 0.3); 
+      margin-bottom: 10px;
+    }
+    .open-btn { 
+      display: inline-block; 
+      margin-top: 8px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; 
+      padding: 10px 20px; 
+      border-radius: 8px; 
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+      transition: transform 0.2s;
+    }
+    .open-btn:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(102, 126, 234, 0.5);
+    }
+    
+    .leaflet-tooltip {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+    
+    @media (max-width:600px) { 
+      .popup-image { height: 130px; } 
+      .side-label { max-width: 160px; font-size: 13px; padding: 7px 12px; border: 2px solid #000; }
+      .custom-marker { width: 42px; height: 54px; }
+      .pin-background { width: 42px; height: 54px; }
+      .logo-container { width: 24px; height: 24px; top: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <h2>BoxOffice Space – Office Locations</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const centerLng = 73.7920;
+    const centerLat = 18.5570;
+    const map = L.map('map').setView([centerLat, centerLng], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const pinSVG = `
+      <svg width="50" height="64" viewBox="0 0 50 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+            <feOffset dx="0" dy="3" result="offsetblur"/>
+            <feComponentTransfer>
+              <feFuncA type="linear" slope="0.4"/>
+            </feComponentTransfer>
+            <feMerge>
+              <feMergeNode/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <path d="M25 2C13.4 2 4 11.4 4 23c0 16.5 21 39 21 39s21-22.5 21-39C46 11.4 36.6 2 25 2z" 
+              fill="#EA4335" 
+              stroke="#fff" 
+              stroke-width="3" 
+              filter="url(#shadow)"/>
+      </svg>
+    `;
+
+    function createBoxOfficeIcon() {
+      return L.divIcon({
+        className: '',
+        html: `
+          <div class="custom-marker">
+            <div class="pin-background">${pinSVG}</div>
+            <div class="logo-container">
+              <img src="logobos.jpg" alt="BoxOffice Logo"/>
+            </div>
+          </div>
+        `,
+        iconSize: [50, 64],
+        iconAnchor: [25, 64],
+        popupAnchor: [0, -64]
+      });
+    }
+
+    const locations = [
+      {name:"Amar Tech Park", lat:18.5756545, lng:73.7651478, img:"images/amar-tech-park.png"},
+      {name:"Montclaire", lat:18.5518182, lng:73.7949971, img:"images/montclaire.jpeg"},
+      {name:"Nandan Aspira", lat:18.5657203, lng:73.8053174, img:"images/nandan-aspira.jpg"},
+      {name:"Nandan Probiz", lat:18.5729802, lng:73.7711947, img:"images/nandan-probiz.jpeg"},
+      {name:"Nano Space", lat:18.5525062, lng:73.7950629, img:"images/nano-space.png"},
+      {name:"Nyati Emporius", lat:18.5671586, lng:73.7658936, img:"images/nyati-emporius.png"},
+      {name:"Sai", lat:18.5560674, lng:73.7933754, img:"images/sai.png"},
+      {name:"Varsha Airawat", lat:18.5533940, lng:73.7930703, img:"images/varsha-airawat.png"},
+      {name:"Vascon Eco Tower", lat:18.5536016, lng:73.7969176, img:"images/vascon-eco-tower.png"},
+      {name:"Vasundhara Space", lat:18.5656777, lng:73.8064977, img:"images/vasundhara-space.jpg"},
+      {name:"Ven Business Square", lat:18.5483562, lng:73.7914310, img:"images/ven-business-square.jpeg"}
+    ];
+
+    function getSmartLabelSide(loc, index, allLocations) {
+      const lat = loc.lat;
+      const lng = loc.lng;
+      
+      // ✅ CHANGE 1: Special positioning for Nandan Aspira and Vasundhara Space
+      if (loc.name === 'Nandan Aspira') {
+        return 'arrow-left';  // LEFT side
+      }
+      
+      if (loc.name === 'Vasundhara Space') {
+        return 'arrow-right';  // RIGHT side
+      }
+      
+      const zones = {
+        topLeft: lng < 73.775 && lat > 18.565,
+        topRight: lng > 73.800 && lat > 18.563,
+        bottomCluster: lat < 18.558,
+        middleRight: lng > 73.795 && lat >= 18.558 && lat <= 18.563
+      };
+      
+      if (zones.topLeft) return 'arrow-right';
+      if (zones.topRight) return 'arrow-left';
+      
+      if (zones.bottomCluster) {
+        const specificPositions = {
+          'Sai': 'arrow-left',
+          'Nano Space': 'arrow-left',
+          'Varsha Airawat': 'arrow-right',
+          'Vascon Eco Tower': 'arrow-right',
+          'Montclaire': 'arrow-right',
+          'Ven Business Square': 'arrow-left'
+        };
+        return specificPositions[loc.name] || 'arrow-right';
+      }
+      
+      return (lng < centerLng) ? 'arrow-right' : 'arrow-left';
+    }
+
+    function getSmartOffset(loc, side) {
+      const baseOffset = 38;
+      const verticalAdjust = -12;
+      const isBottomCluster = loc.lat < 18.558;
+      const extraSpace = isBottomCluster ? 5 : 0;
+      
+      if (side === 'arrow-right') {
+        return [baseOffset + extraSpace, verticalAdjust];
+      } else {
+        return [-(baseOffset + extraSpace), verticalAdjust];
+      }
+    }
+
+    locations.forEach((loc, index) => {
+      const icon = createBoxOfficeIcon();
+      const marker = L.marker([loc.lat, loc.lng], {
+        icon: icon,
+        riseOnHover: true,
+        zIndexOffset: 100
+      }).addTo(map);
+
+      const side = getSmartLabelSide(loc, index, locations);
+      const direction = (side === 'arrow-right') ? 'right' : 'left';
+      const offset = getSmartOffset(loc, side);
+
+      marker.bindTooltip(
+        `<div class="side-label ${side}">${loc.name}</div>`,
+        { 
+          permanent: true, 
+          direction: direction, 
+          offset: offset,
+          opacity: 1
+        }
+      );
+
+      const popupHtml = `
+        <div class="popup-box">
+          <div class="popup-title">${loc.name}</div>
+          <img src="${loc.img}" class="popup-image" 
+               onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;250&quot; height=&quot;160&quot;><rect fill=&quot;%23f0f0f0&quot; width=&quot;250&quot; height=&quot;160&quot;/><text x=&quot;125&quot; y=&quot;85&quot; text-anchor=&quot;middle&quot; fill=&quot;%23999&quot; font-size=&quot;14&quot;>No Image</text></svg>'" 
+               alt="${loc.name}"/>
+          <a class="open-btn" href="${loc.img}" target="_blank" rel="noopener">📍 View Image</a>
+        </div>
+      `;
+      marker.bindPopup(popupHtml, {
+        minWidth: 250,
+        maxWidth: 350
+      });
+    });
+
+    const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
+    map.fitBounds(bounds, { padding: [70, 70] });
+  </script>
+</body>
+</html>

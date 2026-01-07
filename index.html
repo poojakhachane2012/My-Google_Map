@@ -122,16 +122,21 @@
     .open-btn { 
       display: inline-block; 
       margin-top: 8px; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #000;
       color: #fff; 
       padding: 10px 20px; 
       border-radius: 8px; 
       text-decoration: none;
       font-weight: 700;
       font-size: 14px;
-      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
-      transition: transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s, background 0.2s;
     }
+    
+    .open-btn:hover {
+      background: #222;
+    }
+
     .open-btn:hover { 
       transform: translateY(-2px);
       box-shadow: 0 6px 14px rgba(102, 126, 234, 0.5);
@@ -315,3 +320,4 @@
   </script>
 </body>
 </html>
+

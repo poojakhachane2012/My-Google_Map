@@ -1,323 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>BoxOffice Space – Office Locations</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-    h2{margin:0;padding:10px 12px;background:#fff;border-bottom:2px solid #111;font-size:18px}
-    #map{height:calc(100vh - 56px);width:100%}
+<meta charset="utf-8" />
+<title>BoxOffice Space – Office Locations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
+<style>
+:root{--ink:#14213d;--ink2:#23407a;--amber:#fca311;--teal:#0e7c86;--paper:#f6f7f9;--line:#e1e5ec;--on:1}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-direction:column;color:var(--ink)}
 
-    /* Custom pin with logo */
-    .custom-marker {
-      position: relative;
-      width: 50px;
-      height: 64px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      cursor: pointer;
-    }
-    
-    .pin-background {
-      position: absolute;
-      width: 50px;
-      height: 64px;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-    
-    .logo-container {
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-      z-index: 2;
-      overflow: hidden;
-      border: 2px solid white;
-      padding: 2px;
-    }
-    
-    .logo-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-    }
+/* Header */
+.top{position:relative;flex:none;height:64px;display:flex;align-items:center;gap:12px;padding:0 18px;color:#fff;background:linear-gradient(100deg,#0d1730 0%,#14213d 55%,#1f3b6e 100%);z-index:1200}
+.top:after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--amber),#ffd98a,var(--amber),#ffd98a);background-size:200% 100%;animation:shimmer 5s linear infinite}
+.top img{width:38px;height:38px;border-radius:10px;background:#fff;object-fit:contain;padding:4px;animation:logoIn .9s cubic-bezier(.2,.9,.3,1.4) backwards}
+.ttl h1{margin:0;font-size:18px;font-weight:800;letter-spacing:.3px;line-height:1.15}
+.ttl span{font-size:12px;color:#b8c4dc;font-weight:500;letter-spacing:.4px}
+.badge{margin-left:auto;display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:30px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);font-size:13px;font-weight:600;white-space:nowrap;animation:fadeUp .8s .4s ease-out backwards}
+.badge b{font-size:16px;color:var(--amber);font-weight:800;min-width:1ch;text-align:center}
+.badge i{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:blink 1.8s ease-in-out infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+@keyframes logoIn{from{opacity:0;transform:scale(.4) rotate(-20deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}}
+@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(252,163,17,.7)}50%{box-shadow:0 0 0 6px rgba(252,163,17,0)}}
 
-    /* Enhanced colorful labels with BLACK BORDER */
-    .side-label {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 8px 15px; 
-      border-radius: 10px; 
-      border: 3px solid #000;
-      font-weight: 700; 
-      font-size: 14.5px; 
-      white-space: nowrap; 
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-      max-width: 200px; 
-      overflow: hidden; 
-      text-overflow: ellipsis;
-      color: #fff;
-      letter-spacing: 0.4px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.35);
-      position: relative;
-    }
-    
-    .side-label.arrow-right::after {
-      content: ""; 
-      position: absolute; 
-      left: -10px; 
-      top: 50%; 
-      transform: translateY(-50%);
-      border-width: 8px; 
-      border-style: solid; 
-      border-color: transparent #667eea transparent transparent;
-      filter: drop-shadow(-2px 0 2px rgba(0,0,0,0.25));
-    }
-    
-    .side-label.arrow-left::after {
-      content: ""; 
-      position: absolute; 
-      right: -10px; 
-      top: 50%; 
-      transform: translateY(-50%);
-      border-width: 8px; 
-      border-style: solid; 
-      border-color: transparent transparent transparent #764ba2;
-      filter: drop-shadow(2px 0 2px rgba(0,0,0,0.25));
-    }
+/* Map */
+#map{flex:1;width:100%;background:#e9edf2;animation:mapIn 1.2s ease-out}
+@keyframes mapIn{from{opacity:0}}
+.leaflet-tile-pane{filter:saturate(1.1) contrast(1.02)}
+#map:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:500;box-shadow:inset 0 0 90px rgba(20,33,61,.16)}
+.leaflet-bar a{color:var(--ink)}
+.leaflet-bar a:hover{background:var(--paper)}
+.leaflet-bar{border-radius:10px!important;box-shadow:0 4px 14px rgba(20,33,61,.25)!important;overflow:hidden}
 
-    /* Popup styling */
-    .popup-box { width: 250px; text-align: center; }
-    .popup-title { 
-      font-weight: 700; 
-      margin-bottom: 12px; 
-      font-size: 17px; 
-      color: #222;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .popup-image { 
-      width: 100%; 
-      height: 160px; 
-      object-fit: cover; 
-      border-radius: 10px; 
-      border: 2px solid rgba(102, 126, 234, 0.3); 
-      margin-bottom: 10px;
-    }
-    .open-btn { 
-      display: inline-block; 
-      margin-top: 8px; 
-      background: #000;
-      color: #fff; 
-      padding: 10px 20px; 
-      border-radius: 8px; 
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 14px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-      transition: transform 0.2s, background 0.2s;
-    }
-    
-    .open-btn:hover {
-      background: #222;
-    }
+/* Pin */
+.mk{position:relative;width:40px;height:52px}
+.pin{position:absolute;inset:0;cursor:pointer;transform-origin:50% 100%;transition:transform .3s cubic-bezier(.2,.9,.3,1.3);animation:drop .8s cubic-bezier(.2,.9,.3,1.25) backwards;animation-delay:calc(var(--d)*var(--on))}
+.bob{position:absolute;inset:0;animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--i)*-.45s)}
+.bob svg{width:40px;height:52px;display:block;filter:drop-shadow(0 5px 6px rgba(20,33,61,.35));transition:filter .3s}
+.bob svg path{transition:fill .3s}
+.lg{position:absolute;top:7px;left:8px;width:24px;height:24px;border-radius:50%;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.lg img{width:100%;height:100%;object-fit:contain;display:block}
+.shd{position:absolute;left:9px;bottom:-3px;width:22px;height:6px;border-radius:50%;background:radial-gradient(rgba(20,33,61,.45),transparent 70%);animation:shd 3.2s ease-in-out infinite;animation-delay:calc(var(--i)*-.45s)}
+.rip{position:absolute;left:50%;bottom:-5px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:2px solid rgba(252,163,17,.95);opacity:0;pointer-events:none;animation:rip .9s ease-out backwards;animation-delay:calc(var(--d)*var(--on) + 550ms)}
+.pulse{position:absolute;left:50%;bottom:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:rgba(252,163,17,.6);opacity:0;pointer-events:none}
+.mk:hover .pin{transform:translateY(-7px) scale(1.14)}
+.mk:hover .bob svg{filter:drop-shadow(0 8px 10px rgba(20,33,61,.45)) drop-shadow(0 0 8px rgba(252,163,17,.55))}
+.mk.active .pin{transform:scale(1.18)}
+.mk.active .bob svg path{fill:var(--amber)}
+.mk.active .pulse{animation:pulse 1.6s ease-out infinite}
+@keyframes drop{0%{transform:translateY(-90px) scale(.5);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes shd{0%,100%{transform:scaleX(1);opacity:.9}50%{transform:scaleX(.72);opacity:.5}}
+@keyframes rip{from{opacity:.95;transform:scale(.3)}to{opacity:0;transform:scale(3.6)}}
+@keyframes pulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(5);opacity:0}}
 
-    .open-btn:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(102, 126, 234, 0.5);
-    }
-    
-    .leaflet-tooltip {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-    }
-    
-    @media (max-width:600px) { 
-      .popup-image { height: 130px; } 
-      .side-label { max-width: 160px; font-size: 13px; padding: 7px 12px; border: 2px solid #000; }
-      .custom-marker { width: 42px; height: 54px; }
-      .pin-background { width: 42px; height: 54px; }
-      .logo-container { width: 24px; height: 24px; top: 6px; }
-    }
-  </style>
+/* Cluster bubble */
+.cl{position:relative;width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,#2a4478,#14213d);color:#fff;border:3px solid #fff;box-shadow:0 0 0 4px rgba(252,163,17,.75),0 8px 16px rgba(20,33,61,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:16px;line-height:1;cursor:pointer;transition:transform .25s cubic-bezier(.2,.9,.3,1.4);animation:pop2 .6s cubic-bezier(.2,.9,.3,1.4) backwards}
+.cl small{font-size:8px;font-weight:600;letter-spacing:.5px;margin-top:2px;color:#cfd6e4}
+.cl:before,.cl:after{content:'';position:absolute;inset:-9px;border-radius:50%;border:2px solid rgba(252,163,17,.85);animation:halo 2.4s ease-out infinite;pointer-events:none}
+.cl:after{animation-delay:1.2s}
+.cl:hover{transform:scale(1.14)}
+@keyframes halo{0%{transform:scale(.72);opacity:.9}100%{transform:scale(1.4);opacity:0}}
+@keyframes pop2{from{transform:scale(.3);opacity:0}}
+
+/* Cards (hover tooltip + popup) */
+.leaflet-tooltip.tipcard{padding:0;border:0;border-radius:14px;overflow:hidden;box-shadow:0 14px 32px rgba(20,33,61,.4);width:230px;white-space:normal;background:#fff}
+.leaflet-tooltip.tipcard:before{display:none}
+.tipcard .card{animation:cardIn .35s cubic-bezier(.2,.9,.3,1.2)}
+.leaflet-popup-content-wrapper{border-radius:16px;padding:0;overflow:hidden;box-shadow:0 14px 36px rgba(20,33,61,.35);transform-origin:50% 100%;animation:cardIn .4s cubic-bezier(.2,.9,.3,1.25)}
+.leaflet-popup-content{margin:0;width:260px!important}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.92)}}
+.ph{position:relative;overflow:hidden;height:150px;background:var(--paper)}
+.tipcard .ph{height:128px}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s ease}
+.card:hover .ph img{transform:scale(1.08)}
+.ov{position:absolute;left:0;right:0;bottom:0;padding:34px 14px 11px;background:linear-gradient(transparent,rgba(10,18,38,.88));color:#fff}
+.ov .c{font-size:9.5px;letter-spacing:1.4px;font-weight:700;color:var(--amber);text-transform:uppercase;margin-bottom:2px}
+.ov .t{margin:0;font-weight:800;font-size:16px;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+.pb{padding:12px}
+.open-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(100deg,var(--ink),var(--ink2));color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13.5px;transition:filter .2s,transform .2s}
+.open-btn span{display:inline-block;transition:transform .25s}
+.open-btn:hover{filter:brightness(1.25)}
+.open-btn:hover span{transform:translateX(5px)}
+.open-btn:active{transform:scale(.97)}
+.leaflet-container a.leaflet-popup-close-button{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);z-index:5;font-size:20px;top:6px;right:6px}
+
+/* Reset-view button */
+.home{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
+.home svg{width:18px;height:18px;vertical-align:middle;transition:transform .5s}
+.home:hover svg{transform:rotate(90deg) scale(1.1)}
+
+/* Hint */
+.hint{position:fixed;left:50%;bottom:26px;z-index:900;pointer-events:none;background:rgba(20,33,61,.92);color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:30px;box-shadow:0 8px 22px rgba(20,33,61,.4);opacity:0;white-space:nowrap;animation:hint 11s 3.6s ease both}
+@keyframes hint{0%{opacity:0;transform:translate(-50%,18px)}7%{opacity:1;transform:translate(-50%,0)}90%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,10px)}}
+
+@media(max-width:600px){
+  .ttl h1{font-size:16px}.ttl span{font-size:11px}
+  .badge{padding:5px 10px;font-size:12px}
+  .ph{height:120px}
+  .hint{font-size:12px;padding:8px 14px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-  <h2>BoxOffice Space – Office Locations</h2>
-  <div id="map"></div>
+<header class="top">
+  <img src="logobos.jpg" alt="" onerror="this.style.display='none'" />
+  <div class="ttl"><h1>BoxOffice Space</h1><span>Office Locations · Pune</span></div>
+  <div class="badge"><i></i><b id="cnt">0</b> Workspaces</div>
+</header>
+<div id="map"></div>
+<div class="hint" id="hint"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    const centerLng = 73.7920;
-    const centerLat = 18.5570;
-    const map = L.map('map').setView([centerLat, centerLng], 13);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+(function(){
+  var locations=[
+    {name:"Montclaire",lat:18.5518182,lng:73.7949971,img:"images/montclaire.jpeg"},
+    {name:"Nandan Aspira",lat:18.5657203,lng:73.8053174,img:"images/nandan-aspira.jpg"},
+    {name:"Nandan Probiz",lat:18.5729802,lng:73.7711947,img:"images/nandan-probiz.jpeg"},
+    {name:"Nyati Emporius",lat:18.5671586,lng:73.7658936,img:"images/nyati-emporius.png"},
+    {name:"Sai",lat:18.5560674,lng:73.7933754,img:"images/sai.png"},
+    {name:"Varsha Airawat",lat:18.5533940,lng:73.7930703,img:"images/varsha-airawat.png"},
+    {name:"Vascon Eco Tower",lat:18.5536016,lng:73.7969176,img:"images/vascon-eco-tower.png"},
+    {name:"Vasundhara Space",lat:18.5656777,lng:73.8064977,img:"images/vasundhara-space.jpg"},
+    {name:"Ven Business Square",lat:18.5483562,lng:73.7914310,img:"images/ven-business-square.jpeg"}
+  ];
 
-    const pinSVG = `
-      <svg width="50" height="64" viewBox="0 0 50 64" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-            <feOffset dx="0" dy="3" result="offsetblur"/>
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.4"/>
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        <path d="M25 2C13.4 2 4 11.4 4 23c0 16.5 21 39 21 39s21-22.5 21-39C46 11.4 36.6 2 25 2z" 
-              fill="#EA4335" 
-              stroke="#fff" 
-              stroke-width="3" 
-              filter="url(#shadow)"/>
-      </svg>
-    `;
+  var canHover=!!(window.matchMedia&&window.matchMedia('(hover:hover)').matches);
+  var reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches);
 
-    function createBoxOfficeIcon() {
-      return L.divIcon({
-        className: '',
-        html: `
-          <div class="custom-marker">
-            <div class="pin-background">${pinSVG}</div>
-            <div class="logo-container">
-              <img src="logobos.jpg" alt="BoxOffice Logo"/>
-            </div>
-          </div>
-        `,
-        iconSize: [50, 64],
-        iconAnchor: [25, 64],
-        popupAnchor: [0, -64]
-      });
+  /* Start zoomed out, then glide in */
+  var map=L.map('map',{zoomSnap:0.25,zoomDelta:0.5,wheelPxPerZoomLevel:90}).setView([18.558,73.792],12);
+
+  var errs=0,base=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+    subdomains:'abcd',maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'
+  }).addTo(map);
+  base.on('tileerror',function(){
+    if(++errs===4){
+      map.removeLayer(base);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
     }
+  });
 
-    const locations = [
-      {name:"Amar Tech Park", lat:18.5756545, lng:73.7651478, img:"images/amar-tech-park.png"},
-      {name:"Montclaire", lat:18.5518182, lng:73.7949971, img:"images/montclaire.jpeg"},
-      {name:"Nandan Aspira", lat:18.5657203, lng:73.8053174, img:"images/nandan-aspira.jpg"},
-      {name:"Nandan Probiz", lat:18.5729802, lng:73.7711947, img:"images/nandan-probiz.jpeg"},
-      {name:"Nano Space", lat:18.5525062, lng:73.7950629, img:"images/nano-space.png"},
-      {name:"Nyati Emporius", lat:18.5671586, lng:73.7658936, img:"images/nyati-emporius.png"},
-      {name:"Sai", lat:18.5560674, lng:73.7933754, img:"images/sai.png"},
-      {name:"Varsha Airawat", lat:18.5533940, lng:73.7930703, img:"images/varsha-airawat.png"},
-      {name:"Vascon Eco Tower", lat:18.5536016, lng:73.7969176, img:"images/vascon-eco-tower.png"},
-      {name:"Vasundhara Space", lat:18.5656777, lng:73.8064977, img:"images/vasundhara-space.jpg"},
-      {name:"Ven Business Square", lat:18.5483562, lng:73.7914310, img:"images/ven-business-square.jpeg"}
-    ];
+  var pinSVG='<svg viewBox="0 0 50 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a4478"/><stop offset="1" stop-color="#14213d"/></linearGradient></defs><path d="M25 2C13.4 2 4 11.4 4 23c0 16.5 21 39 21 39s21-22.5 21-39C46 11.4 36.6 2 25 2z" fill="url(#pg)" stroke="#fff" stroke-width="3"/></svg>';
+  var noImg="data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="260" height="150"><rect fill="#eef1f5" width="260" height="150"/><text x="130" y="80" text-anchor="middle" fill="#8893a5" font-size="14" font-family="Arial">No Image</text></svg>');
 
-    function getSmartLabelSide(loc, index, allLocations) {
-      const lat = loc.lat;
-      const lng = loc.lng;
-      
-      // ✅ CHANGE 1: Special positioning for Nandan Aspira and Vasundhara Space
-      if (loc.name === 'Nandan Aspira') {
-        return 'arrow-left';  // LEFT side
-      }
-      
-      if (loc.name === 'Vasundhara Space') {
-        return 'arrow-right';  // RIGHT side
-      }
-      
-      const zones = {
-        topLeft: lng < 73.775 && lat > 18.565,
-        topRight: lng > 73.800 && lat > 18.563,
-        bottomCluster: lat < 18.558,
-        middleRight: lng > 73.795 && lat >= 18.558 && lat <= 18.563
-      };
-      
-      if (zones.topLeft) return 'arrow-right';
-      if (zones.topRight) return 'arrow-left';
-      
-      if (zones.bottomCluster) {
-        const specificPositions = {
-          'Sai': 'arrow-left',
-          'Nano Space': 'arrow-left',
-          'Varsha Airawat': 'arrow-right',
-          'Vascon Eco Tower': 'arrow-right',
-          'Montclaire': 'arrow-right',
-          'Ven Business Square': 'arrow-left'
-        };
-        return specificPositions[loc.name] || 'arrow-right';
-      }
-      
-      return (lng < centerLng) ? 'arrow-right' : 'arrow-left';
+  function el(tag,cls){var e=document.createElement(tag);if(cls)e.className=cls;return e}
+
+  function card(loc,withBtn){
+    var d=el('div','card'),ph=el('div','ph'),im=el('img');
+    im.alt=loc.name;
+    im.onerror=function(){im.onerror=null;im.src=noImg};
+    im.src=loc.img;ph.appendChild(im);
+    var ov=el('div','ov'),c=el('div','c'),t=el('p','t');
+    c.textContent='BoxOffice Space';t.textContent=loc.name;
+    ov.appendChild(c);ov.appendChild(t);ph.appendChild(ov);d.appendChild(ph);
+    if(withBtn){
+      var b=el('div','pb'),a=el('a','open-btn'),ar=el('span');
+      a.target='_blank';a.rel='noopener';a.href=loc.img;
+      a.appendChild(document.createTextNode('View Image'));
+      ar.textContent='→';a.appendChild(ar);b.appendChild(a);d.appendChild(b);
     }
+    return d;
+  }
 
-    function getSmartOffset(loc, side) {
-      const baseOffset = 38;
-      const verticalAdjust = -12;
-      const isBottomCluster = loc.lat < 18.558;
-      const extraSpace = isBottomCluster ? 5 : 0;
-      
-      if (side === 'arrow-right') {
-        return [baseOffset + extraSpace, verticalAdjust];
-      } else {
-        return [-(baseOffset + extraSpace), verticalAdjust];
-      }
+  function setActive(m,on){
+    var e=m.getElement();if(!e)return;
+    var mk=e.querySelector('.mk');if(mk)mk.classList.toggle('active',on);
+  }
+
+  var hint=document.getElementById('hint');
+  hint.textContent=canHover?'👆 Hover over a pin to preview · click to open':'👆 Tap a pin to preview the workspace';
+
+  var group=L.markerClusterGroup({
+    maxClusterRadius:55,showCoverageOnHover:false,spiderfyOnMaxZoom:true,zoomToBoundsOnClick:true,
+    iconCreateFunction:function(c){
+      return L.divIcon({className:'',iconSize:[46,46],
+        html:'<div class="cl">'+c.getChildCount()+'<small>OFFICES</small></div>'});
     }
+  });
 
-    locations.forEach((loc, index) => {
-      const icon = createBoxOfficeIcon();
-      const marker = L.marker([loc.lat, loc.lng], {
-        icon: icon,
-        riseOnHover: true,
-        zIndexOffset: 100
-      }).addTo(map);
-
-      const side = getSmartLabelSide(loc, index, locations);
-      const direction = (side === 'arrow-right') ? 'right' : 'left';
-      const offset = getSmartOffset(loc, side);
-
-      marker.bindTooltip(
-        `<div class="side-label ${side}">${loc.name}</div>`,
-        { 
-          permanent: true, 
-          direction: direction, 
-          offset: offset,
-          opacity: 1
-        }
-      );
-
-      const popupHtml = `
-        <div class="popup-box">
-          <div class="popup-title">${loc.name}</div>
-          <img src="${loc.img}" class="popup-image" 
-               onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;250&quot; height=&quot;160&quot;><rect fill=&quot;%23f0f0f0&quot; width=&quot;250&quot; height=&quot;160&quot;/><text x=&quot;125&quot; y=&quot;85&quot; text-anchor=&quot;middle&quot; fill=&quot;%23999&quot; font-size=&quot;14&quot;>No Image</text></svg>'" 
-               alt="${loc.name}"/>
-          <a class="open-btn" href="${loc.img}" target="_blank" rel="noopener">📍 View Image</a>
-        </div>
-      `;
-      marker.bindPopup(popupHtml, {
-        minWidth: 250,
-        maxWidth: 350
-      });
+  locations.forEach(function(loc,i){
+    var icon=L.divIcon({
+      className:'',iconSize:[40,52],iconAnchor:[20,52],popupAnchor:[0,-54],
+      html:'<div class="mk" style="--i:'+i+';--d:'+(1100+i*110)+'ms"><div class="pulse"></div><div class="shd"></div><div class="rip"></div>'+
+           '<div class="pin"><div class="bob">'+pinSVG+
+           '<div class="lg"><img src="logobos.jpg" alt="" onerror="this.style.display=\'none\'"></div></div></div></div>'
     });
+    var m=L.marker([loc.lat,loc.lng],{icon:icon,riseOnHover:true,title:loc.name});
+    m.bindPopup(card(loc,true),{minWidth:260,maxWidth:260,autoPanPadding:[30,30]});
+    if(canHover){
+      m.bindTooltip(card(loc,false),{direction:'top',offset:[0,-52],opacity:1,className:'tipcard'});
+    }
+    m.on('popupopen',function(){m.closeTooltip();setActive(m,true);hint.style.display='none'});
+    m.on('popupclose',function(){setActive(m,false)});
+    group.addLayer(m);
+  });
+  map.addLayer(group);
 
-    const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
-    map.fitBounds(bounds, { padding: [70, 70] });
-  </script>
+  /* Reset-view button */
+  var bounds=L.latLngBounds(locations.map(function(l){return [l.lat,l.lng]}));
+  var fitOpts={paddingTopLeft:[60,90],paddingBottomRight:[60,60]};
+  var Home=L.Control.extend({
+    options:{position:'bottomright'},
+    onAdd:function(){
+      var c=L.DomUtil.create('div','leaflet-bar leaflet-control'),a=L.DomUtil.create('a','home',c);
+      a.href='#';a.title='Show all offices';a.setAttribute('role','button');a.setAttribute('aria-label','Show all offices');
+      a.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#14213d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+      L.DomEvent.disableClickPropagation(c);
+      L.DomEvent.on(a,'click',function(e){
+        L.DomEvent.preventDefault(e);map.closePopup();
+        map.flyToBounds(bounds,Object.assign({duration:1.4},fitOpts));
+      });
+      return c;
+    }
+  });
+  map.addControl(new Home());
+
+  /* Cinematic intro: glide from the wide view to all offices */
+  setTimeout(function(){
+    if(reduce)map.fitBounds(bounds,fitOpts);
+    else map.flyToBounds(bounds,Object.assign({duration:2.4,easeLinearity:.25},fitOpts));
+  },350);
+  /* after the intro, pins that re-appear (e.g. when a cluster opens) pop in instantly */
+  setTimeout(function(){document.documentElement.style.setProperty('--on','0')},4800);
+
+  /* Count-up in the header badge */
+  var cnt=document.getElementById('cnt'),N=locations.length,t0=null;
+  function step(t){
+    if(t0===null)t0=t;
+    var p=Math.min((t-t0)/1200,1);
+    cnt.textContent=Math.round(N*(1-Math.pow(1-p,3)));
+    if(p<1)requestAnimationFrame(step);
+  }
+  if(reduce)cnt.textContent=N;
+  else setTimeout(function(){requestAnimationFrame(step)},500);
+})();
+</script>
 </body>
 </html>
-

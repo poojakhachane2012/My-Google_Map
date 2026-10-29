@@ -2,11 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Boxoffice Space – Our Locations</title>
+<title>BoxOffice Space – Office Locations</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" /> -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
 <style>
 :root{--ink:#14213d;--ink2:#23407a;--amber:#fca311;--teal:#0e7c86;--paper:#f6f7f9;--line:#e1e5ec;--on:1}
@@ -111,7 +109,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
 <body>
 <header class="top">
   <img src="logobos.jpg" alt="" onerror="this.style.display='none'" />
-  <div class="ttl"><h1>BoxOffice Space</h1><span>Office Locations · Pune</span></div>
+  <div class="ttl"><h1>Boxoffice Space</h1><span>Our Locations · Pune</span></div>
   <div class="badge"><i></i><b id="cnt">0</b> Workspaces</div>
 </header>
 <div id="map"></div>
@@ -139,13 +137,16 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
   /* Start zoomed out, then glide in */
   var map=L.map('map',{zoomSnap:0.25,zoomDelta:0.5,wheelPxPerZoomLevel:90}).setView([18.558,73.792],12);
 
-  var errs=0,base=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
-    subdomains:'abcd',maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'
+  /* Map tiles: OpenStreetMap (no API key). Falls back to Esri if OSM fails to load. */
+  var errs=0,base=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
   base.on('tileerror',function(){
-    if(++errs===4){
+    if(++errs===6){
       map.removeLayer(base);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{
+        maxZoom:19,attribution:'Tiles &copy; Esri'
+      }).addTo(map);
     }
   });
 

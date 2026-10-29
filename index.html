@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Boxoffice Space – Office Locations</title>
+<title>Boxoffice Space – Our Locations</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
 <style>
 :root{--ink:#14213d;--ink2:#23407a;--amber:#fca311;--teal:#0e7c86;--paper:#f6f7f9;--line:#e1e5ec;--on:1}
 *{box-sizing:border-box}
@@ -36,8 +35,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
 .leaflet-bar{border-radius:10px!important;box-shadow:0 4px 14px rgba(20,33,61,.25)!important;overflow:hidden}
 
 /* Pin */
-.mk{position:relative;width:40px;height:52px}
-.pin{position:absolute;inset:0;cursor:pointer;transform-origin:50% 100%;transition:transform .3s cubic-bezier(.2,.9,.3,1.3);animation:drop .8s cubic-bezier(.2,.9,.3,1.25) backwards;animation-delay:calc(var(--d)*var(--on))}
+.mk{position:relative;width:40px;height:52px;transform:scale(var(--s,.62));transform-origin:50% 100%;transition:transform .3s ease}
+.pin{position:absolute;inset:0;cursor:pointer;transform-origin:50% 100%;transform:rotate(var(--rot,0deg));transition:transform .3s cubic-bezier(.2,.9,.3,1.3);animation:drop .8s cubic-bezier(.2,.9,.3,1.25) backwards;animation-delay:calc(var(--d)*var(--on))}
 .bob{position:absolute;inset:0;animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--i)*-.45s)}
 .bob svg{width:40px;height:52px;display:block;filter:drop-shadow(0 5px 6px rgba(20,33,61,.35));transition:filter .3s}
 .bob svg path{transition:fill .3s}
@@ -46,25 +45,17 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
 .shd{position:absolute;left:9px;bottom:-3px;width:22px;height:6px;border-radius:50%;background:radial-gradient(rgba(20,33,61,.45),transparent 70%);animation:shd 3.2s ease-in-out infinite;animation-delay:calc(var(--i)*-.45s)}
 .rip{position:absolute;left:50%;bottom:-5px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:2px solid rgba(252,163,17,.95);opacity:0;pointer-events:none;animation:rip .9s ease-out backwards;animation-delay:calc(var(--d)*var(--on) + 550ms)}
 .pulse{position:absolute;left:50%;bottom:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:rgba(252,163,17,.6);opacity:0;pointer-events:none}
-.mk:hover .pin{transform:translateY(-7px) scale(1.14)}
+.mk:hover{--s:1!important}
+.mk:hover .pin{transform:rotate(var(--rot,0deg)) translateY(-7px) scale(1.14)}
 .mk:hover .bob svg{filter:drop-shadow(0 8px 10px rgba(20,33,61,.45)) drop-shadow(0 0 8px rgba(252,163,17,.55))}
-.mk.active .pin{transform:scale(1.18)}
+.mk.active .pin{transform:rotate(var(--rot,0deg)) scale(1.18)}
 .mk.active .bob svg path{fill:var(--amber)}
 .mk.active .pulse{animation:pulse 1.6s ease-out infinite}
-@keyframes drop{0%{transform:translateY(-90px) scale(.5);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+@keyframes drop{0%{transform:translateY(-90px) scale(.5) rotate(var(--rot,0deg));opacity:0}60%{opacity:1}100%{transform:rotate(var(--rot,0deg));opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes shd{0%,100%{transform:scaleX(1);opacity:.9}50%{transform:scaleX(.72);opacity:.5}}
 @keyframes rip{from{opacity:.95;transform:scale(.3)}to{opacity:0;transform:scale(3.6)}}
 @keyframes pulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(5);opacity:0}}
-
-/* Cluster bubble */
-.cl{position:relative;width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,#2a4478,#14213d);color:#fff;border:3px solid #fff;box-shadow:0 0 0 4px rgba(252,163,17,.75),0 8px 16px rgba(20,33,61,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:16px;line-height:1;cursor:pointer;transition:transform .25s cubic-bezier(.2,.9,.3,1.4);animation:pop2 .6s cubic-bezier(.2,.9,.3,1.4) backwards}
-.cl small{font-size:8px;font-weight:600;letter-spacing:.5px;margin-top:2px;color:#cfd6e4}
-.cl:before,.cl:after{content:'';position:absolute;inset:-9px;border-radius:50%;border:2px solid rgba(252,163,17,.85);animation:halo 2.4s ease-out infinite;pointer-events:none}
-.cl:after{animation-delay:1.2s}
-.cl:hover{transform:scale(1.14)}
-@keyframes halo{0%{transform:scale(.72);opacity:.9}100%{transform:scale(1.4);opacity:0}}
-@keyframes pop2{from{transform:scale(.3);opacity:0}}
 
 /* Cards (hover tooltip + popup) */
 .leaflet-tooltip.tipcard{padding:0;border:0;border-radius:14px;overflow:hidden;box-shadow:0 14px 32px rgba(20,33,61,.4);width:230px;white-space:normal;background:#fff}
@@ -116,7 +107,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
 <div class="hint" id="hint"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
 <script>
 (function(){
   var locations=[
@@ -180,13 +170,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
   var hint=document.getElementById('hint');
   hint.textContent=canHover?'👆 Hover over a pin to preview · click to open':'👆 Tap a pin to preview the workspace';
 
-  var group=L.markerClusterGroup({
-    maxClusterRadius:55,showCoverageOnHover:false,spiderfyOnMaxZoom:true,zoomToBoundsOnClick:true,
-    iconCreateFunction:function(c){
-      return L.divIcon({className:'',iconSize:[46,46],
-        html:'<div class="cl">'+c.getChildCount()+'<small>OFFICES</small></div>'});
-    }
-  });
+  var markers=[];
 
   locations.forEach(function(loc,i){
     var icon=L.divIcon({
@@ -200,11 +184,35 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
     if(canHover){
       m.bindTooltip(card(loc,false),{direction:'top',offset:[0,-52],opacity:1,className:'tipcard'});
     }
-    m.on('popupopen',function(){m.closeTooltip();setActive(m,true);hint.style.display='none'});
-    m.on('popupclose',function(){setActive(m,false)});
-    group.addLayer(m);
+    m.on('popupopen',function(){m.closeTooltip();setActive(m,true);hint.style.display='none';layoutPins()});
+    m.on('popupclose',function(){setActive(m,false);setTimeout(layoutPins,0)});
+    m.addTo(map);
+    markers.push(m);
   });
-  map.addLayer(group);
+
+  /* Pins never overlap and never tilt. Every pin stays exactly on its location.
+     Where two offices are very close, their pins shrink just enough to stay apart,
+     and grow smoothly as you zoom in. Hovering a pin brings it to full size. */
+  function layoutPins(){
+    var P=markers.map(function(m){
+      var p=map.latLngToContainerPoint(m.getLatLng());
+      return {m:m,x:p.x,y:p.y,s:1};
+    });
+    for(var i=0;i<P.length;i++){
+      for(var j=i+1;j<P.length;j++){
+        var dx=Math.abs(P[i].x-P[j].x),dy=Math.abs(P[i].y-P[j].y);
+        var fit=Math.max(dx/40,dy/52)*.8;
+        if(fit<1){P[i].s=Math.min(P[i].s,fit);P[j].s=Math.min(P[j].s,fit)}
+      }
+    }
+    P.forEach(function(o){
+      var sc=o.m.isPopupOpen()?1:Math.max(.34,o.s);
+      var e=o.m.getElement(),mk=e&&e.querySelector('.mk');
+      if(mk)mk.style.setProperty('--s',sc.toFixed(3));
+    });
+  }
+  map.on('zoom zoomend resize',layoutPins);
+  layoutPins();
 
   /* Reset-view button */
   var bounds=L.latLngBounds(locations.map(function(l){return [l.lat,l.lng]}));
@@ -230,7 +238,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;flex-d
     if(reduce)map.fitBounds(bounds,fitOpts);
     else map.flyToBounds(bounds,Object.assign({duration:2.4,easeLinearity:.25},fitOpts));
   },350);
-  /* after the intro, pins that re-appear (e.g. when a cluster opens) pop in instantly */
+  /* after the intro, pins that re-render pop in instantly */
   setTimeout(function(){document.documentElement.style.setProperty('--on','0')},4800);
 
   /* Count-up in the header badge */
